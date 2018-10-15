@@ -1,0 +1,94 @@
+﻿@model CascadingDropdownList.Models.CascadingViewmodel
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="form-horizontal">
+    <h2>Cascading DropdownList</h2>
+    <hr />
+    <div class="form-group">
+        @Html.LabelFor(model => model.CountryID, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.CountryID, new SelectList(Model.Countries,
+    "CountryID", "NameOfCountry"), new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.CityID, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.CityID, new SelectList(Model.Cities,
+    "CityID", "NameOfCity"), "Select your country", new { @class = "form-control"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.DistrictID, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.DistrictID, new SelectList(Model.Districts,
+    "DistrictID", "NameOfDistrict"), "Select your city", new { @class = "form-control" })
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        //Country select change
+        $("#CountryID").change(() => {
+            $("#CityID").empty();
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetCities")',
+                dataType: 'json',
+                data: { CountryID: $("#CountryID").val() },
+                success: function (cities) {
+                    $("#DistrictID").empty();
+                    var CityID = cities.length > 0 ? cities[0].CityID : 0;
+                    $.each(cities, function (i, city) {
+                        $("#CityID").append('<option value="' + city.CityID + '">' +
+                            city.NameOfCity + '</option>');
+                    });
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("GetDistricts")',
+                        dataType: 'json',
+                        data: { CityID: CityID },
+                        success: function (districts) {
+                            $.each(districts, (i, district) => {
+                                $("#DistrictID").append('<option value="' + district.DistrictID + '">' +
+                                    district.NameOfDistrict + '</option>');
+                            });
+                        },
+                        error: function (ex) {
+                            alert('Failed to retrueve states.' + ex);
+                        }
+                    });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve states.' + ex);
+                }
+            });
+        });
+
+        //City select change
+        $("#CityID").change(() => {
+            $("#DistrictID").empty();
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetDistricts")',
+                dataType: 'json',
+                data: { CityID: $("#CityID").val() },
+                success: function (districts) {
+                    $.each(districts, (i, district) => {
+                        $("#DistrictID").append('<option value="' + district.DistrictID + '">' +
+                            district.NameOfDistrict + '</option>');
+                    });
+                },
+                error: function (ex) {
+                    alert('Failed to retrueve states.' + ex);
+                }
+            });
+        });
+    })
+</script>
+
